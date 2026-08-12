@@ -1,0 +1,4246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Biblioteca CEEP</title>
+
+
+    <!--
+        ============================================================
+        FIREBASE
+        ============================================================
+    -->
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            deleteDoc,
+            updateDoc,
+            doc
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+        /*
+        ============================================================
+        CONFIGURAÇÃO FALSA DO FIREBASE
+        ============================================================
+
+        ESTES DADOS SÃO APENAS PARA REPRESENTAÇÃO.
+
+        Para usar um Firebase verdadeiro, substitua pelos dados
+        fornecidos pelo seu projeto Firebase.
+        */
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyAbSVyjaYjfqOJaVHixs5FVj02g9JNPgO4",
+  authDomain: "ceep-biblioteca.firebaseapp.com",
+  projectId: "ceep-biblioteca",
+  storageBucket: "ceep-biblioteca.firebasestorage.app",
+  messagingSenderId: "616021028646",
+  appId: "1:616021028646:web:466bf98517b83a44185be7",
+  measurementId: "G-82W9JBPZ5G"
+};
+
+        /*
+        Inicialização do Firebase
+        */
+
+        const app =
+            initializeApp(firebaseConfig);
+
+
+        const db =
+            getFirestore(app);
+
+
+        /*
+        Disponibiliza o Firebase para o restante do código.
+        */
+
+        window.firebaseDB = db;
+
+        window.firebaseFunctions = {
+
+            collection,
+            addDoc,
+            getDocs,
+            deleteDoc,
+            updateDoc,
+            doc
+
+        };
+
+    </script>
+
+
+    <style>
+
+        /* ==========================================================
+           VARIÁVEIS
+        ========================================================== */
+
+        :root {
+
+            --marrom-escuro: #3e2723;
+
+            --marrom: #6b4226;
+
+            --marrom-claro: #8d6245;
+
+            --cinza-escuro: #343a40;
+
+            --cinza: #6c757d;
+
+            --cinza-claro: #f1f1f1;
+
+            --branco: #ffffff;
+
+            --verde: #198754;
+
+            --vermelho: #dc3545;
+
+            --amarelo: #d97706;
+
+        }
+
+
+        /* ==========================================================
+           RESET
+        ========================================================== */
+
+        * {
+
+            margin: 0;
+
+            padding: 0;
+
+            box-sizing: border-box;
+
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                var(--cinza-claro);
+
+            color: #333;
+
+        }
+
+
+        /* ==========================================================
+           SIDEBAR
+        ========================================================== */
+
+        .sidebar {
+
+            width: 250px;
+
+            height: 100vh;
+
+            position: fixed;
+
+            left: 0;
+
+            top: 0;
+
+            background:
+                var(--marrom-escuro);
+
+            color: white;
+
+            padding: 25px 15px;
+
+            z-index: 10;
+
+        }
+
+
+        .logo {
+
+            text-align: center;
+
+            padding-bottom: 25px;
+
+            margin-bottom: 25px;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,0.15);
+
+        }
+
+
+        .logo-icon {
+
+            font-size: 45px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .logo h2 {
+
+            font-size: 20px;
+
+        }
+
+
+        .logo p {
+
+            color: #cdbeb6;
+
+            font-size: 12px;
+
+            margin-top: 6px;
+
+        }
+
+
+        .menu {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 8px;
+
+        }
+
+
+        .menu button {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            background: transparent;
+
+            color: white;
+
+            text-align: left;
+
+            font-size: 15px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+        }
+
+
+        .menu button:hover {
+
+            background:
+                rgba(255,255,255,0.1);
+
+        }
+
+
+        .menu button.active {
+
+            background:
+                var(--marrom);
+
+        }
+
+
+        .sidebar-bottom {
+
+            position: absolute;
+
+            bottom: 25px;
+
+            left: 20px;
+
+            color: #cdbeb6;
+
+        }
+
+
+        /* ==========================================================
+           CONTEÚDO
+        ========================================================== */
+
+        .content {
+
+            margin-left: 250px;
+
+            padding: 35px;
+
+            min-height: 100vh;
+
+        }
+
+
+        .page {
+
+            display: none;
+
+        }
+
+
+        .page.active {
+
+            display: block;
+
+        }
+
+
+        /* ==========================================================
+           CABEÇALHO
+        ========================================================== */
+
+        .header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 30px;
+
+        }
+
+
+        .header h1 {
+
+            color:
+                var(--marrom-escuro);
+
+            font-size: 32px;
+
+        }
+
+
+        .header p {
+
+            color: #777;
+
+            margin-top: 5px;
+
+        }
+
+
+        .date {
+
+            background: white;
+
+            padding: 12px 18px;
+
+            border-radius: 8px;
+
+            color:
+                var(--marrom);
+
+            font-weight: bold;
+
+        }
+
+
+        /* ==========================================================
+           CARDS
+        ========================================================== */
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 20px;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .card {
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 22px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0,0,0,0.06);
+
+        }
+
+
+        .card-icon {
+
+            width: 55px;
+
+            height: 55px;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            font-size: 25px;
+
+        }
+
+
+        .brown {
+
+            background: #eadbd0;
+
+        }
+
+
+        .gray {
+
+            background: #dfe2e5;
+
+        }
+
+
+        .yellow {
+
+            background: #fff0d0;
+
+        }
+
+
+        .red {
+
+            background: #f8d7da;
+
+        }
+
+
+        .card p {
+
+            color: #777;
+
+            font-size: 13px;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .card h2 {
+
+            color:
+                var(--marrom-escuro);
+
+            font-size: 28px;
+
+        }
+
+
+        /* ==========================================================
+           PAINEL
+        ========================================================== */
+
+        .panel {
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 25px;
+
+            margin-bottom: 25px;
+
+            box-shadow:
+                0 3px 12px
+                rgba(0,0,0,0.06);
+
+        }
+
+
+        .panel-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 25px;
+
+            gap: 15px;
+
+        }
+
+
+        .panel h2 {
+
+            color:
+                var(--marrom-escuro);
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .panel-header p {
+
+            color: #777;
+
+            font-size: 14px;
+
+        }
+
+
+        /* ==========================================================
+           FORMULÁRIO
+        ========================================================== */
+
+        .form-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 20px;
+
+        }
+
+
+        .input {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+        .input label {
+
+            font-weight: bold;
+
+            color:
+                var(--marrom-escuro);
+
+            margin-bottom: 7px;
+
+            font-size: 14px;
+
+        }
+
+
+        .input input,
+        .input select {
+
+            padding: 12px;
+
+            border:
+                1px solid #ccc;
+
+            border-radius: 7px;
+
+            font-size: 14px;
+
+            outline: none;
+
+        }
+
+
+        .input input:focus,
+        .input select:focus {
+
+            border-color:
+                var(--marrom);
+
+        }
+
+
+        .buttons {
+
+            display: flex;
+
+            justify-content: flex-end;
+
+            gap: 10px;
+
+            margin-top: 25px;
+
+        }
+
+
+        /* ==========================================================
+           BOTÕES
+        ========================================================== */
+
+        .btn {
+
+            padding: 11px 18px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            background:
+                var(--marrom);
+
+            color: white;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+        }
+
+
+        .btn:hover {
+
+            background:
+                var(--marrom-escuro);
+
+        }
+
+
+        .btn-gray {
+
+            background:
+                var(--cinza);
+
+        }
+
+
+        .btn-green {
+
+            background:
+                var(--verde);
+
+        }
+
+
+        .btn-red {
+
+            background:
+                var(--vermelho);
+
+        }
+
+
+        .btn-small {
+
+            padding: 7px 10px;
+
+            font-size: 12px;
+
+        }
+
+
+        /* ==========================================================
+           PESQUISA
+        ========================================================== */
+
+        .search {
+
+            width: 260px;
+
+            padding: 11px;
+
+            border:
+                1px solid #ccc;
+
+            border-radius: 7px;
+
+            outline: none;
+
+        }
+
+
+        /* ==========================================================
+           TABELA
+        ========================================================== */
+
+        .table-container {
+
+            overflow-x: auto;
+
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 750px;
+
+        }
+
+
+        th {
+
+            background:
+                var(--marrom-escuro);
+
+            color: white;
+
+            padding: 13px;
+
+            text-align: left;
+
+            font-size: 13px;
+
+        }
+
+
+        td {
+
+            padding: 13px;
+
+            border-bottom:
+                1px solid #eee;
+
+            font-size: 13px;
+
+        }
+
+
+        tbody tr:hover {
+
+            background:
+                #faf7f5;
+
+        }
+
+
+        .empty {
+
+            text-align: center;
+
+            color: #888;
+
+            padding: 30px;
+
+        }
+
+
+        /* ==========================================================
+           STATUS
+        ========================================================== */
+
+        .status {
+
+            display: inline-block;
+
+            padding: 6px 10px;
+
+            border-radius: 20px;
+
+            font-size: 11px;
+
+            font-weight: bold;
+
+        }
+
+
+        .status-green {
+
+            background: #d1e7dd;
+
+            color: #0f5132;
+
+        }
+
+
+        .status-yellow {
+
+            background: #fff3cd;
+
+            color: #856404;
+
+        }
+
+
+        .status-red {
+
+            background: #f8d7da;
+
+            color: #842029;
+
+        }
+
+
+        /* ==========================================================
+           DASHBOARD
+        ========================================================== */
+
+        .dashboard-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                2fr 1fr;
+
+            gap: 25px;
+
+        }
+
+
+        .quick-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 15px;
+
+            background: #f7f7f7;
+
+            margin-top: 10px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+        }
+
+
+        .quick-item:hover {
+
+            background:
+                #eee5df;
+
+        }
+
+
+        .quick-icon {
+
+            font-size: 25px;
+
+        }
+
+
+        .quick-item strong {
+
+            display: block;
+
+            color:
+                var(--marrom-escuro);
+
+        }
+
+
+        .quick-item small {
+
+            color: #777;
+
+        }
+
+
+        /* ==========================================================
+           MENSAGEM
+        ========================================================== */
+
+        .message {
+
+            position: fixed;
+
+            right: 25px;
+
+            bottom: 25px;
+
+            background:
+                var(--marrom-escuro);
+
+            color: white;
+
+            padding: 15px 20px;
+
+            border-radius: 8px;
+
+            box-shadow:
+                0 5px 20px
+                rgba(0,0,0,0.2);
+
+            display: none;
+
+            z-index: 100;
+
+        }
+
+
+        /* ==========================================================
+           RESPONSIVO
+        ========================================================== */
+
+        @media(max-width: 1100px) {
+
+            .cards {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+
+            .dashboard-grid {
+
+                grid-template-columns: 1fr;
+
+            }
+
+        }
+
+
+        @media(max-width: 800px) {
+
+            .sidebar {
+
+                position: relative;
+
+                width: 100%;
+
+                height: auto;
+
+            }
+
+
+            .sidebar-bottom {
+
+                display: none;
+
+            }
+
+
+            .content {
+
+                margin-left: 0;
+
+                padding: 20px;
+
+            }
+
+
+            .form-grid {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .header {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 15px;
+
+            }
+
+        }
+
+
+        @media(max-width: 550px) {
+
+            .cards {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .panel-header {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+
+            }
+
+
+            .search {
+
+                width: 100%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ============================================================
+         MENU
+    ============================================================ -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                📚
+            </div>
+
+            <h2>
+                Biblioteca CEEP
+            </h2>
+
+            <p>
+                Sistema de Empréstimos
+            </p>
+
+        </div>
+
+
+        <div class="menu">
+
+            <button
+                class="menu-button active"
+                onclick="abrirPagina('dashboard', this)">
+
+                🏠 Dashboard
+
+            </button>
+
+
+            <button
+                class="menu-button"
+                onclick="abrirPagina('alunos', this)">
+
+                👨‍🎓 Alunos
+
+            </button>
+
+
+            <button
+                class="menu-button"
+                onclick="abrirPagina('livros', this)">
+
+                📖 Livros
+
+            </button>
+
+
+            <button
+                class="menu-button"
+                onclick="abrirPagina('emprestimos', this)">
+
+                🔄 Empréstimos
+
+            </button>
+
+        </div>
+
+
+        <div class="sidebar-bottom">
+
+            <strong>CEEP</strong>
+
+            <br>
+
+            <small>
+                Biblioteca Escolar
+            </small>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ============================================================
+         CONTEÚDO
+    ============================================================ -->
+
+    <main class="content">
+
+
+        <!-- ========================================================
+             DASHBOARD
+        ======================================================== -->
+
+        <section
+            id="dashboard"
+            class="page active">
+
+
+            <div class="header">
+
+                <div>
+
+                    <h1>
+                        Dashboard
+                    </h1>
+
+                    <p>
+                        Bem-vindo ao sistema da Biblioteca CEEP.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="date"
+                    id="dataAtual">
+
+                </div>
+
+            </div>
+
+
+            <div class="cards">
+
+
+                <div class="card">
+
+                    <div class="card-icon brown">
+                        👨‍🎓
+                    </div>
+
+                    <div>
+
+                        <p>
+                            Alunos cadastrados
+                        </p>
+
+                        <h2 id="totalAlunos">
+                            0
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-icon gray">
+                        📚
+                    </div>
+
+                    <div>
+
+                        <p>
+                            Livros cadastrados
+                        </p>
+
+                        <h2 id="totalLivros">
+                            0
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-icon yellow">
+                        🔄
+                    </div>
+
+                    <div>
+
+                        <p>
+                            Livros emprestados
+                        </p>
+
+                        <h2 id="totalEmprestados">
+                            0
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-icon red">
+                        ⚠️
+                    </div>
+
+                    <div>
+
+                        <p>
+                            Atrasados
+                        </p>
+
+                        <h2 id="totalAtrasados">
+                            0
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <h2>
+                                Empréstimos recentes
+                            </h2>
+
+                            <p>
+                                Últimas movimentações
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            class="btn"
+                            onclick="
+                                abrirPagina(
+                                    'emprestimos',
+                                    document.querySelectorAll('.menu-button')[3]
+                                )
+                            ">
+
+                            + Novo empréstimo
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Aluno
+                                    </th>
+
+                                    <th>
+                                        Livro
+                                    </th>
+
+                                    <th>
+                                        Empréstimo
+                                    </th>
+
+                                    <th>
+                                        Previsão
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody
+                                id="tabelaRecentes">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <h2>
+                        Acesso rápido
+                    </h2>
+
+                    <p>
+                        Gerencie a biblioteca.
+                    </p>
+
+
+                    <div
+                        class="quick-item"
+                        onclick="
+                            abrirPagina(
+                                'alunos',
+                                document.querySelectorAll('.menu-button')[1]
+                            )
+                        ">
+
+                        <div class="quick-icon">
+                            👨‍🎓
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Cadastrar aluno
+                            </strong>
+
+                            <small>
+                                Adicionar novo aluno
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="quick-item"
+                        onclick="
+                            abrirPagina(
+                                'livros',
+                                document.querySelectorAll('.menu-button')[2]
+                            )
+                        ">
+
+                        <div class="quick-icon">
+                            📖
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Cadastrar livro
+                            </strong>
+
+                            <small>
+                                Adicionar livro ao acervo
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="quick-item"
+                        onclick="
+                            abrirPagina(
+                                'emprestimos',
+                                document.querySelectorAll('.menu-button')[3]
+                            )
+                        ">
+
+                        <div class="quick-icon">
+                            🔄
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Novo empréstimo
+                            </strong>
+
+                            <small>
+                                Registrar retirada
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             ALUNOS
+        ======================================================== -->
+
+        <section
+            id="alunos"
+            class="page">
+
+
+            <div class="header">
+
+                <div>
+
+                    <h1>
+                        Alunos
+                    </h1>
+
+                    <p>
+                        Cadastro dos alunos da biblioteca.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Cadastro de aluno
+                        </h2>
+
+                        <p>
+                            Informe os dados do aluno.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="formAluno">
+
+
+                    <div class="form-grid">
+
+
+                        <div class="input">
+
+                            <label>
+                                Nome completo *
+                            </label>
+
+                            <input
+                                id="alunoNome"
+                                type="text"
+                                placeholder="Digite o nome"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Matrícula *
+                            </label>
+
+                            <input
+                                id="alunoMatricula"
+                                type="text"
+                                placeholder="Ex: 20260001"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Turma *
+                            </label>
+
+                            <input
+                                id="alunoTurma"
+                                type="text"
+                                placeholder="Ex: 2º A"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Curso *
+                            </label>
+
+                            <input
+                                id="alunoCurso"
+                                type="text"
+                                placeholder="Ex: Desenvolvimento de Sistemas"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                E-mail
+                            </label>
+
+                            <input
+                                id="alunoEmail"
+                                type="email"
+                                placeholder="aluno@email.com">
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Telefone
+                            </label>
+
+                            <input
+                                id="alunoTelefone"
+                                type="text"
+                                placeholder="(00) 00000-0000">
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="buttons">
+
+                        <button
+                            type="reset"
+                            class="btn btn-gray">
+
+                            Limpar
+
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="btn">
+
+                            Cadastrar aluno
+
+                        </button>
+
+                    </div>
+
+
+                </form>
+
+            </div>
+
+
+            <div class="panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Alunos cadastrados
+                        </h2>
+
+                        <p>
+                            Lista de alunos registrados.
+                        </p>
+
+                    </div>
+
+
+                    <input
+                        id="pesquisaAluno"
+                        class="search"
+                        type="text"
+                        placeholder="🔎 Pesquisar aluno...">
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Nome
+                                </th>
+
+                                <th>
+                                    Matrícula
+                                </th>
+
+                                <th>
+                                    Turma
+                                </th>
+
+                                <th>
+                                    Curso
+                                </th>
+
+                                <th>
+                                    E-mail
+                                </th>
+
+                                <th>
+                                    Ação
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="listaAlunos">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             LIVROS
+        ======================================================== -->
+
+        <section
+            id="livros"
+            class="page">
+
+
+            <div class="header">
+
+                <div>
+
+                    <h1>
+                        Livros
+                    </h1>
+
+                    <p>
+                        Controle do acervo da biblioteca.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Cadastro de livro
+                        </h2>
+
+                        <p>
+                            Adicione livros ao acervo.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="formLivro">
+
+
+                    <div class="form-grid">
+
+
+                        <div class="input">
+
+                            <label>
+                                Título *
+                            </label>
+
+                            <input
+                                id="livroTitulo"
+                                type="text"
+                                placeholder="Título do livro"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Autor *
+                            </label>
+
+                            <input
+                                id="livroAutor"
+                                type="text"
+                                placeholder="Nome do autor"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                ISBN
+                            </label>
+
+                            <input
+                                id="livroISBN"
+                                type="text"
+                                placeholder="ISBN">
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Editora
+                            </label>
+
+                            <input
+                                id="livroEditora"
+                                type="text"
+                                placeholder="Editora">
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Ano
+                            </label>
+
+                            <input
+                                id="livroAno"
+                                type="number"
+                                placeholder="2026">
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Categoria
+                            </label>
+
+                            <input
+                                id="livroCategoria"
+                                type="text"
+                                placeholder="Ex: Tecnologia">
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Quantidade *
+                            </label>
+
+                            <input
+                                id="livroQuantidade"
+                                type="number"
+                                min="1"
+                                value="1"
+                                required>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="buttons">
+
+                        <button
+                            type="reset"
+                            class="btn btn-gray">
+
+                            Limpar
+
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="btn">
+
+                            Cadastrar livro
+
+                        </button>
+
+                    </div>
+
+
+                </form>
+
+            </div>
+
+
+            <div class="panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Acervo
+                        </h2>
+
+                        <p>
+                            Livros cadastrados.
+                        </p>
+
+                    </div>
+
+
+                    <input
+                        id="pesquisaLivro"
+                        class="search"
+                        type="text"
+                        placeholder="🔎 Pesquisar livro...">
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Título
+                                </th>
+
+                                <th>
+                                    Autor
+                                </th>
+
+                                <th>
+                                    Categoria
+                                </th>
+
+                                <th>
+                                    Ano
+                                </th>
+
+                                <th>
+                                    Total
+                                </th>
+
+                                <th>
+                                    Disponíveis
+                                </th>
+
+                                <th>
+                                    Ação
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="listaLivros">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             EMPRÉSTIMOS
+        ======================================================== -->
+
+        <section
+            id="emprestimos"
+            class="page">
+
+
+            <div class="header">
+
+                <div>
+
+                    <h1>
+                        Empréstimos
+                    </h1>
+
+                    <p>
+                        Controle de retirada e devolução.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Novo empréstimo
+                        </h2>
+
+                        <p>
+                            Registre a retirada de um livro.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    id="formEmprestimo">
+
+
+                    <div class="form-grid">
+
+
+                        <div class="input">
+
+                            <label>
+                                Aluno *
+                            </label>
+
+                            <select
+                                id="emprestimoAluno"
+                                required>
+
+                                <option value="">
+                                    Selecione o aluno
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Livro *
+                            </label>
+
+                            <select
+                                id="emprestimoLivro"
+                                required>
+
+                                <option value="">
+                                    Selecione o livro
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Data do empréstimo *
+                            </label>
+
+                            <input
+                                id="dataEmprestimo"
+                                type="date"
+                                required>
+
+                        </div>
+
+
+                        <div class="input">
+
+                            <label>
+                                Previsão de devolução *
+                            </label>
+
+                            <input
+                                id="dataPrevisao"
+                                type="date"
+                                required>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="buttons">
+
+                        <button
+                            type="submit"
+                            class="btn">
+
+                            Registrar empréstimo
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <div class="panel">
+
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Empréstimos registrados
+                        </h2>
+
+                        <p>
+                            Controle dos livros emprestados.
+                        </p>
+
+                    </div>
+
+
+                    <input
+                        id="pesquisaEmprestimo"
+                        class="search"
+                        type="text"
+                        placeholder="🔎 Pesquisar...">
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Aluno
+                                </th>
+
+                                <th>
+                                    Livro
+                                </th>
+
+                                <th>
+                                    Empréstimo
+                                </th>
+
+                                <th>
+                                    Previsão
+                                </th>
+
+                                <th>
+                                    Devolução
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Ação
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="listaEmprestimos">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ============================================================
+         MENSAGEM
+    ============================================================ -->
+
+    <div
+        id="message"
+        class="message">
+
+    </div>
+
+
+    <!-- ============================================================
+         JAVASCRIPT DO SISTEMA
+    ============================================================ -->
+
+    <script>
+
+        /*
+        ============================================================
+        VARIÁVEIS
+        ============================================================
+        */
+
+        let alunos = [];
+
+        let livros = [];
+
+        let emprestimos = [];
+
+
+        /*
+        ============================================================
+        FUNÇÃO PARA MOSTRAR MENSAGEM
+        ============================================================
+        */
+
+        function mensagem(texto) {
+
+            const elemento =
+                document.getElementById(
+                    "message"
+                );
+
+
+            elemento.textContent =
+                texto;
+
+
+            elemento.style.display =
+                "block";
+
+
+            setTimeout(
+                () => {
+
+                    elemento.style.display =
+                        "none";
+
+                },
+
+                3000
+            );
+
+        }
+
+
+        /*
+        ============================================================
+        NAVEGAÇÃO
+        ============================================================
+        */
+
+        function abrirPagina(
+            pagina,
+            botao
+        ) {
+
+            document
+                .querySelectorAll(".page")
+                .forEach(
+                    elemento => {
+
+                        elemento.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+            document
+                .getElementById(pagina)
+                .classList.add(
+                    "active"
+                );
+
+
+            document
+                .querySelectorAll(
+                    ".menu-button"
+                )
+                .forEach(
+                    elemento => {
+
+                        elemento.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+            if (botao) {
+
+                botao.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            if (
+                pagina ===
+                "dashboard"
+            ) {
+
+                atualizarDashboard();
+
+            }
+
+        }
+
+
+        /*
+        ============================================================
+        DATA ATUAL
+        ============================================================
+        */
+
+        function mostrarData() {
+
+            const hoje =
+                new Date();
+
+
+            document.getElementById(
+                "dataAtual"
+            ).textContent =
+                hoje.toLocaleDateString(
+                    "pt-BR"
+                );
+
+        }
+
+
+        /*
+        ============================================================
+        FIREBASE
+        ============================================================
+        */
+
+        function firebaseDisponivel() {
+
+            return (
+                window.firebaseDB &&
+                window.firebaseFunctions
+            );
+
+        }
+
+
+        /*
+        ============================================================
+        CADASTRAR ALUNO
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "formAluno"
+            )
+            .addEventListener(
+                "submit",
+
+                async function(event) {
+
+                    event.preventDefault();
+
+
+                    const aluno = {
+
+                        nome:
+                            document
+                                .getElementById(
+                                    "alunoNome"
+                                )
+                                .value
+                                .trim(),
+
+                        matricula:
+                            document
+                                .getElementById(
+                                    "alunoMatricula"
+                                )
+                                .value
+                                .trim(),
+
+                        turma:
+                            document
+                                .getElementById(
+                                    "alunoTurma"
+                                )
+                                .value
+                                .trim(),
+
+                        curso:
+                            document
+                                .getElementById(
+                                    "alunoCurso"
+                                )
+                                .value
+                                .trim(),
+
+                        email:
+                            document
+                                .getElementById(
+                                    "alunoEmail"
+                                )
+                                .value
+                                .trim(),
+
+                        telefone:
+                            document
+                                .getElementById(
+                                    "alunoTelefone"
+                                )
+                                .value
+                                .trim(),
+
+                        criadoEm:
+                            new Date()
+                                .toISOString()
+
+                    };
+
+
+                    try {
+
+                        if (
+                            firebaseDisponivel()
+                        ) {
+
+                            await window
+                                .firebaseFunctions
+                                .addDoc(
+
+                                    window
+                                        .firebaseFunctions
+                                        .collection(
+                                            window.firebaseDB,
+                                            "alunos"
+                                        ),
+
+                                    aluno
+
+                                );
+
+                        }
+
+
+                        /*
+                        Também adicionamos localmente
+                        para demonstração.
+                        */
+
+                        aluno.id =
+                            Date.now()
+                                .toString();
+
+
+                        alunos.push(
+                            aluno
+                        );
+
+
+                        mensagem(
+                            "Aluno cadastrado com sucesso!"
+                        );
+
+
+                        this.reset();
+
+
+                        mostrarAlunos();
+
+                        atualizarDashboard();
+
+                    }
+
+                    catch(error) {
+
+                        console.error(
+                            error
+                        );
+
+                        mensagem(
+                            "Erro ao cadastrar aluno."
+                        );
+
+                    }
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        MOSTRAR ALUNOS
+        ============================================================
+        */
+
+        function mostrarAlunos(
+            lista = alunos
+        ) {
+
+            const tabela =
+                document.getElementById(
+                    "listaAlunos"
+                );
+
+
+            tabela.innerHTML = "";
+
+
+            if (
+                lista.length === 0
+            ) {
+
+                tabela.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty">
+
+                            Nenhum aluno cadastrado.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                atualizarSelectAlunos();
+
+                return;
+
+            }
+
+
+            lista.forEach(
+                aluno => {
+
+                    tabela.innerHTML += `
+
+                        <tr>
+
+                            <td>
+                                ${aluno.nome}
+                            </td>
+
+                            <td>
+                                ${aluno.matricula}
+                            </td>
+
+                            <td>
+                                ${aluno.turma}
+                            </td>
+
+                            <td>
+                                ${aluno.curso}
+                            </td>
+
+                            <td>
+                                ${aluno.email || "-"}
+                            </td>
+
+                            <td>
+
+                                <button
+                                    class="btn btn-red btn-small"
+                                    onclick="
+                                        excluirAluno(
+                                            '${aluno.id}'
+                                        )
+                                    ">
+
+                                    Excluir
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+
+            atualizarSelectAlunos();
+
+        }
+
+
+        /*
+        ============================================================
+        EXCLUIR ALUNO
+        ============================================================
+        */
+
+        async function excluirAluno(
+            id
+        ) {
+
+            if (
+                !confirm(
+                    "Deseja excluir este aluno?"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            try {
+
+                if (
+                    firebaseDisponivel()
+                ) {
+
+                    await window
+                        .firebaseFunctions
+                        .deleteDoc(
+
+                            window
+                                .firebaseFunctions
+                                .doc(
+                                    window.firebaseDB,
+                                    "alunos",
+                                    id
+                                )
+
+                        );
+
+                }
+
+
+                alunos =
+                    alunos.filter(
+                        aluno =>
+                            aluno.id !== id
+                    );
+
+
+                mostrarAlunos();
+
+                atualizarDashboard();
+
+
+                mensagem(
+                    "Aluno excluído."
+                );
+
+            }
+
+            catch(error) {
+
+                console.error(
+                    error
+                );
+
+                mensagem(
+                    "Erro ao excluir aluno."
+                );
+
+            }
+
+        }
+
+
+        /*
+        ============================================================
+        PESQUISA ALUNO
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "pesquisaAluno"
+            )
+            .addEventListener(
+                "input",
+
+                function() {
+
+                    const texto =
+                        this.value
+                            .toLowerCase();
+
+
+                    const resultado =
+                        alunos.filter(
+                            aluno =>
+
+                                aluno.nome
+                                    .toLowerCase()
+                                    .includes(
+                                        texto
+                                    )
+
+                                ||
+
+                                aluno.matricula
+                                    .toLowerCase()
+                                    .includes(
+                                        texto
+                                    )
+
+                        );
+
+
+                    mostrarAlunos(
+                        resultado
+                    );
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        CADASTRAR LIVRO
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "formLivro"
+            )
+            .addEventListener(
+                "submit",
+
+                async function(event) {
+
+                    event.preventDefault();
+
+
+                    const quantidade =
+                        Number(
+                            document
+                                .getElementById(
+                                    "livroQuantidade"
+                                )
+                                .value
+                        );
+
+
+                    const livro = {
+
+                        titulo:
+                            document
+                                .getElementById(
+                                    "livroTitulo"
+                                )
+                                .value
+                                .trim(),
+
+                        autor:
+                            document
+                                .getElementById(
+                                    "livroAutor"
+                                )
+                                .value
+                                .trim(),
+
+                        isbn:
+                            document
+                                .getElementById(
+                                    "livroISBN"
+                                )
+                                .value
+                                .trim(),
+
+                        editora:
+                            document
+                                .getElementById(
+                                    "livroEditora"
+                                )
+                                .value
+                                .trim(),
+
+                        ano:
+                            document
+                                .getElementById(
+                                    "livroAno"
+                                )
+                                .value,
+
+                        categoria:
+                            document
+                                .getElementById(
+                                    "livroCategoria"
+                                )
+                                .value
+                                .trim(),
+
+                        quantidade:
+                            quantidade,
+
+                        disponiveis:
+                            quantidade,
+
+                        criadoEm:
+                            new Date()
+                                .toISOString()
+
+                    };
+
+
+                    try {
+
+                        if (
+                            firebaseDisponivel()
+                        ) {
+
+                            await window
+                                .firebaseFunctions
+                                .addDoc(
+
+                                    window
+                                        .firebaseFunctions
+                                        .collection(
+                                            window.firebaseDB,
+                                            "livros"
+                                        ),
+
+                                    livro
+
+                                );
+
+                        }
+
+
+                        livro.id =
+                            Date.now()
+                                .toString();
+
+
+                        livros.push(
+                            livro
+                        );
+
+
+                        mensagem(
+                            "Livro cadastrado com sucesso!"
+                        );
+
+
+                        this.reset();
+
+
+                        document
+                            .getElementById(
+                                "livroQuantidade"
+                            )
+                            .value = 1;
+
+
+                        mostrarLivros();
+
+                        atualizarDashboard();
+
+                    }
+
+                    catch(error) {
+
+                        console.error(
+                            error
+                        );
+
+                        mensagem(
+                            "Erro ao cadastrar livro."
+                        );
+
+                    }
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        MOSTRAR LIVROS
+        ============================================================
+        */
+
+        function mostrarLivros(
+            lista = livros
+        ) {
+
+            const tabela =
+                document.getElementById(
+                    "listaLivros"
+                );
+
+
+            tabela.innerHTML = "";
+
+
+            if (
+                lista.length === 0
+            ) {
+
+                tabela.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty">
+
+                            Nenhum livro cadastrado.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                atualizarSelectLivros();
+
+                return;
+
+            }
+
+
+            lista.forEach(
+                livro => {
+
+                    const disponivel =
+                        livro.disponiveis > 0;
+
+
+                    tabela.innerHTML += `
+
+                        <tr>
+
+                            <td>
+                                ${livro.titulo}
+                            </td>
+
+                            <td>
+                                ${livro.autor}
+                            </td>
+
+                            <td>
+                                ${livro.categoria || "-"}
+                            </td>
+
+                            <td>
+                                ${livro.ano || "-"}
+                            </td>
+
+                            <td>
+                                ${livro.quantidade}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="status ${
+                                        disponivel
+                                        ? "status-green"
+                                        : "status-red"
+                                    }">
+
+                                    ${livro.disponiveis}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <button
+                                    class="btn btn-red btn-small"
+                                    onclick="
+                                        excluirLivro(
+                                            '${livro.id}'
+                                        )
+                                    ">
+
+                                    Excluir
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+
+            atualizarSelectLivros();
+
+        }
+
+
+        /*
+        ============================================================
+        EXCLUIR LIVRO
+        ============================================================
+        */
+
+        async function excluirLivro(
+            id
+        ) {
+
+            if (
+                !confirm(
+                    "Deseja excluir este livro?"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            try {
+
+                if (
+                    firebaseDisponivel()
+                ) {
+
+                    await window
+                        .firebaseFunctions
+                        .deleteDoc(
+
+                            window
+                                .firebaseFunctions
+                                .doc(
+                                    window.firebaseDB,
+                                    "livros",
+                                    id
+                                )
+
+                        );
+
+                }
+
+
+                livros =
+                    livros.filter(
+                        livro =>
+                            livro.id !== id
+                    );
+
+
+                mostrarLivros();
+
+                atualizarDashboard();
+
+
+                mensagem(
+                    "Livro excluído."
+                );
+
+            }
+
+            catch(error) {
+
+                console.error(
+                    error
+                );
+
+                mensagem(
+                    "Erro ao excluir livro."
+                );
+
+            }
+
+        }
+
+
+        /*
+        ============================================================
+        PESQUISA LIVROS
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "pesquisaLivro"
+            )
+            .addEventListener(
+                "input",
+
+                function() {
+
+                    const texto =
+                        this.value
+                            .toLowerCase();
+
+
+                    const resultado =
+                        livros.filter(
+                            livro =>
+
+                                livro.titulo
+                                    .toLowerCase()
+                                    .includes(
+                                        texto
+                                    )
+
+                                ||
+
+                                livro.autor
+                                    .toLowerCase()
+                                    .includes(
+                                        texto
+                                    )
+
+                        );
+
+
+                    mostrarLivros(
+                        resultado
+                    );
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        SELECT DE ALUNOS
+        ============================================================
+        */
+
+        function atualizarSelectAlunos() {
+
+            const select =
+                document.getElementById(
+                    "emprestimoAluno"
+                );
+
+
+            select.innerHTML = `
+
+                <option value="">
+                    Selecione o aluno
+                </option>
+
+            `;
+
+
+            alunos.forEach(
+                aluno => {
+
+                    select.innerHTML += `
+
+                        <option
+                            value="${aluno.id}">
+
+                            ${aluno.nome}
+                            -
+                            ${aluno.matricula}
+
+                        </option>
+
+                    `;
+
+                }
+            );
+
+        }
+
+
+        /*
+        ============================================================
+        SELECT DE LIVROS
+        ============================================================
+        */
+
+        function atualizarSelectLivros() {
+
+            const select =
+                document.getElementById(
+                    "emprestimoLivro"
+                );
+
+
+            select.innerHTML = `
+
+                <option value="">
+                    Selecione o livro
+                </option>
+
+            `;
+
+
+            livros
+                .filter(
+                    livro =>
+                        livro.disponiveis > 0
+                )
+                .forEach(
+                    livro => {
+
+                        select.innerHTML += `
+
+                            <option
+                                value="${livro.id}">
+
+                                ${livro.titulo}
+                                -
+                                ${livro.disponiveis}
+                                disponível(is)
+
+                            </option>
+
+                        `;
+
+                    }
+                );
+
+        }
+
+
+        /*
+        ============================================================
+        DATA DO EMPRÉSTIMO
+        ============================================================
+        */
+
+        document.getElementById(
+            "dataEmprestimo"
+        ).value =
+
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+
+        /*
+        ============================================================
+        CADASTRAR EMPRÉSTIMO
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "formEmprestimo"
+            )
+            .addEventListener(
+                "submit",
+
+                async function(event) {
+
+                    event.preventDefault();
+
+
+                    const alunoId =
+                        document
+                            .getElementById(
+                                "emprestimoAluno"
+                            )
+                            .value;
+
+
+                    const livroId =
+                        document
+                            .getElementById(
+                                "emprestimoLivro"
+                            )
+                            .value;
+
+
+                    const dataEmprestimo =
+                        document
+                            .getElementById(
+                                "dataEmprestimo"
+                            )
+                            .value;
+
+
+                    const dataPrevisao =
+                        document
+                            .getElementById(
+                                "dataPrevisao"
+                            )
+                            .value;
+
+
+                    if (
+                        dataPrevisao <
+                        dataEmprestimo
+                    ) {
+
+                        mensagem(
+                            "A data de devolução não pode ser anterior ao empréstimo."
+                        );
+
+                        return;
+
+                    }
+
+
+                    const livro =
+                        livros.find(
+                            item =>
+                                item.id ===
+                                livroId
+                        );
+
+
+                    if (!livro) {
+
+                        mensagem(
+                            "Livro não encontrado."
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (
+                        livro.disponiveis <= 0
+                    ) {
+
+                        mensagem(
+                            "Livro indisponível."
+                        );
+
+                        return;
+
+                    }
+
+
+                    const emprestimo = {
+
+                        id:
+                            Date.now()
+                                .toString(),
+
+                        alunoId:
+                            alunoId,
+
+                        livroId:
+                            livroId,
+
+                        dataEmprestimo:
+                            dataEmprestimo,
+
+                        dataPrevisao:
+                            dataPrevisao,
+
+                        dataDevolucao:
+                            null,
+
+                        status:
+                            "EMPRESTADO",
+
+                        criadoEm:
+                            new Date()
+                                .toISOString()
+
+                    };
+
+
+                    try {
+
+                        if (
+                            firebaseDisponivel()
+                        ) {
+
+                            await window
+                                .firebaseFunctions
+                                .addDoc(
+
+                                    window
+                                        .firebaseFunctions
+                                        .collection(
+                                            window.firebaseDB,
+                                            "emprestimos"
+                                        ),
+
+                                    emprestimo
+
+                                );
+
+
+                            await window
+                                .firebaseFunctions
+                                .updateDoc(
+
+                                    window
+                                        .firebaseFunctions
+                                        .doc(
+                                            window.firebaseDB,
+                                            "livros",
+                                            livroId
+                                        ),
+
+                                    {
+
+                                        disponiveis:
+                                            livro.disponiveis - 1
+
+                                    }
+
+                                );
+
+                        }
+
+
+                        /*
+                        Atualizar livro localmente
+                        */
+
+                        livro.disponiveis--;
+
+
+                        emprestimos.push(
+                            emprestimo
+                        );
+
+
+                        mensagem(
+                            "Empréstimo registrado com sucesso!"
+                        );
+
+
+                        this.reset();
+
+
+                        document
+                            .getElementById(
+                                "dataEmprestimo"
+                            )
+                            .value =
+
+                            new Date()
+                                .toISOString()
+                                .split("T")[0];
+
+
+                        mostrarLivros();
+
+                        mostrarEmprestimos();
+
+                        atualizarDashboard();
+
+                    }
+
+                    catch(error) {
+
+                        console.error(
+                            error
+                        );
+
+                        mensagem(
+                            "Erro ao registrar empréstimo."
+                        );
+
+                    }
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        MOSTRAR EMPRÉSTIMOS
+        ============================================================
+        */
+
+        function mostrarEmprestimos(
+            lista = emprestimos
+        ) {
+
+            const tabela =
+                document.getElementById(
+                    "listaEmprestimos"
+                );
+
+
+            tabela.innerHTML = "";
+
+
+            if (
+                lista.length === 0
+            ) {
+
+                tabela.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty">
+
+                            Nenhum empréstimo registrado.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            lista
+                .slice()
+                .reverse()
+                .forEach(
+                    emprestimo => {
+
+                        const aluno =
+                            alunos.find(
+                                item =>
+                                    item.id ===
+                                    emprestimo.alunoId
+                            );
+
+
+                        const livro =
+                            livros.find(
+                                item =>
+                                    item.id ===
+                                    emprestimo.livroId
+                            );
+
+
+                        let status =
+                            emprestimo.status;
+
+
+                        const hoje =
+                            new Date()
+                                .toISOString()
+                                .split("T")[0];
+
+
+                        if (
+
+                            status ===
+                            "EMPRESTADO"
+
+                            &&
+
+                            emprestimo.dataPrevisao
+                            < hoje
+
+                        ) {
+
+                            status =
+                                "ATRASADO";
+
+                        }
+
+
+                        let classe =
+                            "status-yellow";
+
+
+                        if (
+                            status ===
+                            "DEVOLVIDO"
+                        ) {
+
+                            classe =
+                                "status-green";
+
+                        }
+
+
+                        if (
+                            status ===
+                            "ATRASADO"
+                        ) {
+
+                            classe =
+                                "status-red";
+
+                        }
+
+
+                        let botao = "";
+
+
+                        if (
+                            emprestimo.status !==
+                            "DEVOLVIDO"
+                        ) {
+
+                            botao = `
+
+                                <button
+                                    class="
+                                        btn
+                                        btn-green
+                                        btn-small
+                                    "
+                                    onclick="
+                                        devolverLivro(
+                                            '${emprestimo.id}'
+                                        )
+                                    ">
+
+                                    Devolver
+
+                                </button>
+
+                            `;
+
+                        }
+
+
+                        tabela.innerHTML += `
+
+                            <tr>
+
+                                <td>
+                                    ${aluno
+                                        ? aluno.nome
+                                        : "-"
+                                    }
+                                </td>
+
+                                <td>
+                                    ${livro
+                                        ? livro.titulo
+                                        : "-"
+                                    }
+                                </td>
+
+                                <td>
+                                    ${emprestimo.dataEmprestimo}
+                                </td>
+
+                                <td>
+                                    ${emprestimo.dataPrevisao}
+                                </td>
+
+                                <td>
+                                    ${emprestimo.dataDevolucao || "-"}
+                                </td>
+
+                                <td>
+
+                                    <span
+                                        class="
+                                            status
+                                            ${classe}
+                                        ">
+
+                                        ${status}
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    ${botao}
+
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    }
+                );
+
+        }
+
+
+        /*
+        ============================================================
+        DEVOLVER LIVRO
+        ============================================================
+        */
+
+        async function devolverLivro(
+            id
+        ) {
+
+            const emprestimo =
+                emprestimos.find(
+                    item =>
+                        item.id === id
+                );
+
+
+            if (!emprestimo) {
+
+                mensagem(
+                    "Empréstimo não encontrado."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                !confirm(
+                    "Confirmar devolução deste livro?"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const livro =
+                livros.find(
+                    item =>
+                        item.id ===
+                        emprestimo.livroId
+                );
+
+
+            try {
+
+                if (
+                    firebaseDisponivel()
+                ) {
+
+                    await window
+                        .firebaseFunctions
+                        .updateDoc(
+
+                            window
+                                .firebaseFunctions
+                                .doc(
+                                    window.firebaseDB,
+                                    "emprestimos",
+                                    id
+                                ),
+
+                            {
+
+                                status:
+                                    "DEVOLVIDO",
+
+                                dataDevolucao:
+                                    new Date()
+                                        .toISOString()
+                                        .split("T")[0]
+
+                            }
+
+                        );
+
+
+                    if (livro) {
+
+                        await window
+                            .firebaseFunctions
+                            .updateDoc(
+
+                                window
+                                    .firebaseFunctions
+                                    .doc(
+                                        window.firebaseDB,
+                                        "livros",
+                                        livro.id
+                                    ),
+
+                                {
+
+                                    disponiveis:
+                                        livro.disponiveis + 1
+
+                                }
+
+                            );
+
+                    }
+
+                }
+
+
+                emprestimo.status =
+                    "DEVOLVIDO";
+
+
+                emprestimo.dataDevolucao =
+
+                    new Date()
+                        .toISOString()
+                        .split("T")[0];
+
+
+                if (livro) {
+
+                    livro.disponiveis++;
+
+                }
+
+
+                mostrarEmprestimos();
+
+                mostrarLivros();
+
+                atualizarDashboard();
+
+
+                mensagem(
+                    "Livro devolvido com sucesso!"
+                );
+
+            }
+
+            catch(error) {
+
+                console.error(
+                    error
+                );
+
+                mensagem(
+                    "Erro ao devolver livro."
+                );
+
+            }
+
+        }
+
+
+        /*
+        ============================================================
+        PESQUISA EMPRÉSTIMOS
+        ============================================================
+        */
+
+        document
+            .getElementById(
+                "pesquisaEmprestimo"
+            )
+            .addEventListener(
+                "input",
+
+                function() {
+
+                    const texto =
+                        this.value
+                            .toLowerCase();
+
+
+                    const resultado =
+                        emprestimos.filter(
+                            emprestimo => {
+
+                                const aluno =
+                                    alunos.find(
+                                        item =>
+                                            item.id ===
+                                            emprestimo.alunoId
+                                    );
+
+
+                                const livro =
+                                    livros.find(
+                                        item =>
+                                            item.id ===
+                                            emprestimo.livroId
+                                    );
+
+
+                                return (
+
+                                    aluno?.nome
+                                        ?.toLowerCase()
+                                        .includes(
+                                            texto
+                                        )
+
+                                    ||
+
+                                    livro?.titulo
+                                        ?.toLowerCase()
+                                        .includes(
+                                            texto
+                                        )
+
+                                );
+
+                            }
+                        );
+
+
+                    mostrarEmprestimos(
+                        resultado
+                    );
+
+                }
+            );
+
+
+        /*
+        ============================================================
+        DASHBOARD
+        ============================================================
+        */
+
+        function atualizarDashboard() {
+
+            document.getElementById(
+                "totalAlunos"
+            ).textContent =
+                alunos.length;
+
+
+            document.getElementById(
+                "totalLivros"
+            ).textContent =
+                livros.length;
+
+
+            const emprestados =
+                emprestimos.filter(
+                    item =>
+                        item.status ===
+                        "EMPRESTADO"
+                );
+
+
+            document.getElementById(
+                "totalEmprestados"
+            ).textContent =
+                emprestados.length;
+
+
+            const hoje =
+                new Date()
+                    .toISOString()
+                    .split("T")[0];
+
+
+            const atrasados =
+                emprestimos.filter(
+                    item =>
+
+                        item.status ===
+                        "EMPRESTADO"
+
+                        &&
+
+                        item.dataPrevisao
+                        < hoje
+
+                );
+
+
+            document.getElementById(
+                "totalAtrasados"
+            ).textContent =
+                atrasados.length;
+
+
+            const tabela =
+                document.getElementById(
+                    "tabelaRecentes"
+                );
+
+
+            tabela.innerHTML = "";
+
+
+            const recentes =
+                emprestimos
+                    .slice(-7)
+                    .reverse();
+
+
+            if (
+                recentes.length === 0
+            ) {
+
+                tabela.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty">
+
+                            Nenhum empréstimo cadastrado.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            recentes.forEach(
+                emprestimo => {
+
+                    const aluno =
+                        alunos.find(
+                            item =>
+                                item.id ===
+                                emprestimo.alunoId
+                        );
+
+
+                    const livro =
+                        livros.find(
+                            item =>
+                                item.id ===
+                                emprestimo.livroId
+                        );
+
+
+                    let status =
+                        emprestimo.status;
+
+
+                    if (
+
+                        status ===
+                        "EMPRESTADO"
+
+                        &&
+
+                        emprestimo.dataPrevisao
+                        < hoje
+
+                    ) {
+
+                        status =
+                            "ATRASADO";
+
+                    }
+
+
+                    let classe =
+                        "status-yellow";
+
+
+                    if (
+                        status ===
+                        "DEVOLVIDO"
+                    ) {
+
+                        classe =
+                            "status-green";
+
+                    }
+
+
+                    if (
+                        status ===
+                        "ATRASADO"
+                    ) {
+
+                        classe =
+                            "status-red";
+
+                    }
+
+
+                    tabela.innerHTML += `
+
+                        <tr>
+
+                            <td>
+                                ${aluno
+                                    ? aluno.nome
+                                    : "-"
+                                }
+                            </td>
+
+                            <td>
+                                ${livro
+                                    ? livro.titulo
+                                    : "-"
+                                }
+                            </td>
+
+                            <td>
+                                ${emprestimo.dataEmprestimo}
+                            </td>
+
+                            <td>
+                                ${emprestimo.dataPrevisao}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="
+                                        status
+                                        ${classe}
+                                    ">
+
+                                    ${status}
+
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+        }
+
+
+        /*
+        ============================================================
+        CARREGAR DADOS DO FIREBASE
+        ============================================================
+        */
+
+        async function carregarDados() {
+
+            try {
+
+                /*
+                Se o Firebase estiver disponível,
+                tenta carregar os dados.
+                */
+
+                if (
+                    firebaseDisponivel()
+                ) {
+
+                    const alunosSnapshot =
+                        await window
+                            .firebaseFunctions
+                            .getDocs(
+
+                                window
+                                    .firebaseFunctions
+                                    .collection(
+                                        window.firebaseDB,
+                                        "alunos"
+                                    )
+
+                            );
+
+
+                    alunosSnapshot.forEach(
+                        item => {
+
+                            alunos.push({
+
+                                id:
+                                    item.id,
+
+                                ...item.data()
+
+                            });
+
+                        }
+                    );
+
+
+                    const livrosSnapshot =
+                        await window
+                            .firebaseFunctions
+                            .getDocs(
+
+                                window
+                                    .firebaseFunctions
+                                    .collection(
+                                        window.firebaseDB,
+                                        "livros"
+                                    )
+
+                            );
+
+
+                    livrosSnapshot.forEach(
+                        item => {
+
+                            livros.push({
+
+                                id:
+                                    item.id,
+
+                                ...item.data()
+
+                            });
+
+                        }
+                    );
+
+
+                    const emprestimosSnapshot =
+                        await window
+                            .firebaseFunctions
+                            .getDocs(
+
+                                window
+                                    .firebaseFunctions
+                                    .collection(
+                                        window.firebaseDB,
+                                        "emprestimos"
+                                    )
+
+                            );
+
+
+                    emprestimosSnapshot.forEach(
+                        item => {
+
+                            emprestimos.push({
+
+                                id:
+                                    item.id,
+
+                                ...item.data()
+
+                            });
+
+                        }
+                    );
+
+                }
+
+            }
+
+            catch(error) {
+
+                /*
+                Como a chave é falsa,
+                o Firebase poderá apresentar erro.
+
+                O sistema continua funcionando
+                com os dados locais para demonstração.
+                */
+
+                console.log(
+                    "Firebase demonstrativo:",
+                    error.message
+                );
+
+            }
+
+
+            mostrarAlunos();
+
+            mostrarLivros();
+
+            mostrarEmprestimos();
+
+            atualizarDashboard();
+
+        }
+
+
+        /*
+        ============================================================
+        INICIALIZAÇÃO
+        ============================================================
+        */
+
+        mostrarData();
+
+        carregarDados();
+
+    </script>
+
+
+</body>
+
+</html>
